@@ -1,33 +1,38 @@
 import React, {useState, useEffect} from 'react';
 import './App.css';
-import axios from 'axios';
+import Notes from './components/Notes';
+import NewNote from './components/NewNote';
+import noteService from './services/notes';
+
 function App() {
   const [notes, setNotes] = useState([]);
+  const [newNote, setNewNote] = useState("");
+  const [newImportance, setNewImportance] = useState(false);
+
+
   const getNotes = () => {
-  console.log("Starting effect");
-  axios
-  .get('http://localhost:3001/notes')
-  .then(response => {
-    //const notes = response.data
-    console.log("promise fulfilled");
-    setNotes(response.data);
-  })};
-
+    console.log("Starting effect");
+    noteService.getAll()
+    .then(allNotes => {
+      setNotes(allNotes);
+    })};
+    
   useEffect(getNotes, []);
-
-  console.log("ready", notes);
-
   // testing addnote
   const addNote = event => {
+  const now = new Date();
+  event.preventDefault();
   const testNote = {
-    content: "Remember to sleep",
-    date: "2019-10-23T14:06:00.000Z",
-    important: true
+    content: newNote,
+    date: now.toISOString(),
+    important: newImportance
   };
-  axios
-  .post('http://localhost:3001/notes', testNote)
-  .then(response => {
-    console.log(response);
+ noteService.add(testNote)
+  .then(note => {
+    let tempNotes = notes.concat(note);
+    setNotes(tempNotes);
+    setNewNote("");
+    setNewImportance(false);
   })
 }
 
@@ -36,7 +41,11 @@ function App() {
       <header className="App-header">
         <h1>JSON server with notes</h1>
       </header>
-      <button onClick={e => addNote(e)}>Click me</button>
+      <body className="App-body">
+        <Notes notes={notes} setNotes={setNotes} />
+        <NewNote newNote={newNote} setNewNote={setNewNote} newImportance={newImportance} setNewImportance={setNewImportance} submitHandler={addNote}/>
+        <button onClick={e => addNote(e)}>Lisää tiedot</button>
+      </body>
     </div>
   );
 }
